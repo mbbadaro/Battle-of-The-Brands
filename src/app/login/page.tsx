@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getSupabase } from "@/lib/supabase/client";
+import { supabaseConfigured } from "@/lib/supabase/env";
+import { NotConfigured } from "@/components/setup-problem";
 import { HeroBanner } from "@/components/brand";
 import { Button, Notice, Spinner, inputClass } from "@/components/ui";
 
@@ -13,6 +15,18 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+
+  // Already signed in (getSession also refreshes an expired token): go straight to the app.
+  useEffect(() => {
+    if (!supabaseConfigured) return;
+    getSupabase()
+      .auth.getSession()
+      .then(({ data }) => {
+        if (data.session) window.location.replace("/");
+      });
+  }, []);
+
+  if (!supabaseConfigured) return <NotConfigured />;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

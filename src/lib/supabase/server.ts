@@ -11,7 +11,7 @@ export async function getServerSupabase() {
         try {
           list.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
         } catch {
-          // Called from a Server Component; the middleware refreshes the session instead.
+          // Called from a Server Component; the browser client refreshes the session cookie instead.
         }
       },
     },
