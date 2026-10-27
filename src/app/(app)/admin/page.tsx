@@ -8,6 +8,7 @@ import type { AppError } from "@/lib/errors";
 import { fmtDateTime, fmtInt } from "@/lib/format";
 import { productColor } from "@/lib/labels";
 import { Button, Card, LoadingBlock, Notice, SectionTitle, Spinner, inputClass, selectClass } from "@/components/ui";
+import { PageHero } from "@/components/brand";
 
 function useAction() {
   const { refreshAll } = useLive();
@@ -251,7 +252,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="display text-3xl text-navy">Admin</h1>
+      <PageHero kicker="Admin console" title="Admin" subtitle="Inventory, products, team and the audit trail." />
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-4">
           <InventorySetup live={live.data} />

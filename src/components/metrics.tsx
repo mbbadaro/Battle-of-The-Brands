@@ -7,12 +7,12 @@ import { fmtDec, fmtInt, fmtPct } from "@/lib/format";
 
 export function KpiCard({ label, value, sub, accent = false }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className={`print-break rounded-2xl p-4 ${accent ? "wrapper-stripes bg-navy text-white" : "border border-line bg-paper text-navy"}`}>
-      <div className={`text-[11px] font-black uppercase tracking-wider ${accent ? "text-blue-soft" : "text-muted"}`}>{label}</div>
+    <div className={`print-break rounded-2xl p-4 text-white ${accent ? "bg-blue shadow-lg shadow-blue/30" : "bg-white/10 ring-1 ring-white/15"}`}>
+      <div className="text-[11px] font-black uppercase tracking-wider text-blue-soft">{label}</div>
       <div className="display tabular mt-1 text-[34px] leading-none" data-testid={`kpi-${label}`}>
         {value}
       </div>
-      {sub && <div className={`mt-1 text-xs font-semibold ${accent ? "text-white/75" : "text-muted"}`}>{sub}</div>}
+      {sub && <div className="mt-1 text-xs font-semibold text-white/75">{sub}</div>}
     </div>
   );
 }
@@ -20,7 +20,7 @@ export function KpiCard({ label, value, sub, accent = false }: { label: string; 
 export function KpiGrid({ d }: { d: Dashboard }) {
   const k = d.kpis;
   return (
-    <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
+    <div className="wrapper-stripes grid grid-cols-2 gap-2.5 rounded-3xl bg-navy p-3 sm:p-4 md:grid-cols-4">
       <KpiCard accent label="Tickets earned" value={fmtInt(k.total_tickets)} sub={d.voided.count ? `${fmtInt(d.voided.tickets)} voided tickets excluded` : "From completed sales"} />
       <KpiCard label="Bars sold" value={fmtInt(k.total_bars)} sub={`of ${fmtInt(d.inventory.available_total)} available`} />
       <KpiCard label="Bars remaining" value={fmtInt(d.inventory.remaining)} />
@@ -48,10 +48,10 @@ export function HighlightCards({ h }: { h: Highlights }) {
   return (
     <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
       {cards.map((c) => (
-        <div key={c.label} className="print-break rounded-2xl border-2 border-blue/25 bg-blue-soft p-3.5">
-          <div className="text-[11px] font-black uppercase tracking-wider text-blue-deep">{c.label}</div>
-          <div className="display mt-1 text-lg leading-tight text-navy">{c.title}</div>
-          <div className="text-xs font-semibold text-muted">{c.sub}</div>
+        <div key={c.label} className="print-break sky rounded-2xl p-3.5 text-white">
+          <div className="text-[11px] font-black uppercase tracking-wider text-blue-soft">{c.label}</div>
+          <div className="display mt-1 text-lg leading-tight">{c.title}</div>
+          <div className="text-xs font-semibold text-white/75">{c.sub}</div>
         </div>
       ))}
     </div>

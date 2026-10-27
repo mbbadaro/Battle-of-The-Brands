@@ -36,8 +36,11 @@ export function InventoryPanel({ inventory, products }: { inventory: Inventory; 
   const [open, setOpen] = useState(false);
   const tone = stockTone(inventory);
   return (
-    <section className="wrapper-stripes rounded-2xl bg-navy px-4 pb-3 pt-3 text-white" aria-label="Inventory">
-      <button className="w-full text-left" onClick={() => setOpen(!open)} aria-expanded={open}>
+    <section className="relative overflow-hidden rounded-2xl bg-navy px-4 pb-3 pt-3 text-white" aria-label="Inventory">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/promo.jpg" alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right opacity-60" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-navy via-navy/90 to-navy/40" />
+      <button className="relative w-full text-left" onClick={() => setOpen(!open)} aria-expanded={open}>
         <div className="flex items-end justify-between gap-3">
           <div className="flex items-baseline gap-2">
             <span className="display tabular text-[44px] leading-[0.85]" data-testid="bars-remaining">{fmtInt(inventory.remaining)}</span>
@@ -61,7 +64,7 @@ export function InventoryPanel({ inventory, products }: { inventory: Inventory; 
         </div>
       </button>
       {open && (
-        <div className="tabular mt-3 grid grid-cols-2 gap-x-4 gap-y-1 border-t border-white/15 pt-3 text-[13px]">
+        <div className="tabular relative mt-3 grid grid-cols-2 gap-x-4 gap-y-1 border-t border-white/15 pt-3 text-[13px]">
           <span className="text-white/70">Initial inventory</span>
           <b className="text-right">{fmtInt(inventory.initial)}</b>
           <span className="text-white/70">+ Restocks / adjustments in</span>
