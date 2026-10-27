@@ -4,11 +4,11 @@ import { useRpc } from "@/hooks/live";
 import type { Dashboard } from "@/lib/types";
 import { buildTimeline, highlights, productMetrics } from "@/lib/analytics";
 import { fmtInt, fmtTime } from "@/lib/format";
-import { productColor } from "@/lib/labels";
 import { Card, EmptyState, LoadingBlock, Notice, SectionTitle } from "@/components/ui";
 import { CATEGORY_DEFINITION, CategoryTable, HighlightCards, KpiGrid, ProductTable } from "@/components/metrics";
 import { CategoryChart, ProductBarChart, TimelineChart } from "@/components/charts";
-import { InventoryBar } from "@/components/inventory-panel";
+import { WrapperInventory } from "@/components/report-art";
+import { PageHero } from "@/components/brand";
 
 export default function DashboardPage() {
   const { data: d, error, loading } = useRpc<Dashboard>("get_dashboard");
@@ -23,38 +23,27 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="display text-3xl text-navy">Live dashboard</h1>
-          <p className="text-sm text-muted">
-            Updates automatically. {d.kpis.last_sale_at ? `Last sale at ${fmtTime(d.kpis.last_sale_at, d.settings.timezone)}.` : "No sales yet."}
-          </p>
+      <PageHero
+        kicker="Live"
+        title="Live dashboard"
+        subtitle={`OREO meets protein. Updates automatically. ${d.kpis.last_sale_at ? `Last sale at ${fmtTime(d.kpis.last_sale_at, d.settings.timezone)}.` : "No sales yet."}`}
+      >
+        <div className="rounded-2xl bg-navy/70 px-4 py-2 text-right backdrop-blur-sm">
+          <div className="display tabular text-6xl leading-none">{fmtInt(d.kpis.total_tickets)}</div>
+          <div className="text-xs font-black uppercase tracking-wider text-white/80">tickets so far</div>
         </div>
-        {error && <Notice tone="warn">Showing last loaded data: {error.message}</Notice>}
-      </div>
+      </PageHero>
+      {error && <Notice tone="warn">Showing last loaded data: {error.message}</Notice>}
 
       <KpiGrid d={d} />
 
-      <Card>
-        <SectionTitle aside={<span className="tabular text-sm font-bold text-navy">{fmtInt(d.inventory.remaining)} bars left</span>}>
-          Inventory
-        </SectionTitle>
-        <div className="rounded-xl bg-navy p-3">
-          <InventoryBar inventory={d.inventory} products={d.products} tall />
+      <section className="sky rounded-3xl p-4 text-white sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-2">
+          <h2 className="display text-xl">Inventory</h2>
+          <span className="tabular text-sm font-bold">{fmtInt(d.inventory.remaining)} bars left</span>
         </div>
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-muted">
-          {d.products.map((p) => (
-            <span key={p.id} className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: productColor(p.id) }} />
-              {p.name}: {fmtInt(p.bars_sold)} bars
-            </span>
-          ))}
-          <span className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm bg-navy" />
-            Remaining: {fmtInt(d.inventory.remaining)}
-          </span>
-        </div>
-      </Card>
+        <WrapperInventory inventory={d.inventory} products={d.products} />
+      </section>
 
       <HighlightCards h={h} />
 

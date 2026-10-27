@@ -9,6 +9,7 @@ import { fmtDateTime, fmtInt } from "@/lib/format";
 import { useExportCsv } from "@/hooks/export";
 import { Button, Card, EmptyState, LoadingBlock, Notice, Spinner, inputClass, selectClass } from "@/components/ui";
 import { Modal, VoidDialog } from "@/components/void-dialog";
+import { PageHero } from "@/components/brand";
 
 const PAGE = 50;
 
@@ -73,19 +74,17 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="display text-3xl text-navy">Transaction history</h1>
-          <p className="text-sm text-muted">
-            {isAdmin ? "All sales, newest first. Voided sales stay listed but never count in totals." : "Sales you recorded, newest first."}
-          </p>
-        </div>
+      <PageHero
+        kicker="Every sale"
+        title="Transaction history"
+        subtitle={isAdmin ? "All sales, newest first. Voided sales stay listed but never count in totals." : "Sales you recorded, newest first."}
+      >
         {isAdmin && (
-          <Button variant="navy" onClick={() => exporter.run(live.data)} disabled={exporter.busy || !live.data}>
+          <Button variant="primary" onClick={() => exporter.run(live.data)} disabled={exporter.busy || !live.data}>
             {exporter.busy && <Spinner />} Export CSV
           </Button>
         )}
-      </div>
+      </PageHero>
       {exporter.error && <Notice tone="bad">{exporter.error}</Notice>}
 
       <Card className="no-print grid grid-cols-2 gap-2 p-3 md:grid-cols-6">
@@ -194,7 +193,7 @@ export default function HistoryPage() {
           <div className="hidden overflow-x-auto rounded-2xl border border-line bg-paper md:block">
             <table className="tabular w-full text-sm">
               <thead>
-                <tr className="border-b-2 border-navy text-left text-[11px] font-black uppercase tracking-wider text-muted">
+                <tr className="bg-navy text-left text-[11px] font-black uppercase tracking-wider text-white/85">
                   <th className="px-3 py-2">ID</th>
                   <th className="px-2 py-2">Date & time</th>
                   <th className="px-2 py-2">NetID</th>
