@@ -1,7 +1,7 @@
 // Campaign-styled pieces for the end-of-event report.
 import type { ProductMetrics } from "@/lib/analytics";
 import type { Inventory, ProductState } from "@/lib/types";
-import { productColor } from "@/lib/labels";
+import { productColor, productInk } from "@/lib/labels";
 import { fmtInt, fmtPct } from "@/lib/format";
 
 // An OREO-style cookie with the rank in the middle.
@@ -53,8 +53,8 @@ export function WrapperInventory({ inventory, products }: { inventory: Inventory
           {sold.map((p) => (
             <div
               key={p.id}
-              className="flex items-center justify-center overflow-hidden text-[11px] font-black uppercase text-white"
-              style={{ width: `${(p.bars_sold / total) * 100}%`, background: productColor(p.id) }}
+              className="flex items-center justify-center overflow-hidden text-[11px] font-black uppercase"
+              style={{ width: `${(p.bars_sold / total) * 100}%`, background: productColor(p.id), color: productInk(p.id) }}
               title={`${p.name}: ${p.bars_sold} bars`}
             >
               <span className="truncate px-1">{p.bars_sold / total > 0.08 ? fmtInt(p.bars_sold) : ""}</span>

@@ -269,7 +269,7 @@ export default function AdminPage() {
               <ul className="divide-y divide-line text-sm">
                 {admin.data.adjustments.map((a) => (
                   <li key={a.id} className="tabular py-2">
-                    <b className={a.delta > 0 ? "text-good" : "text-bad"}>
+                    <b className={a.delta > 0 ? "text-good" : "text-navy"}>
                       {a.delta > 0 ? "+" : ""}
                       {a.delta} bars
                     </b>{" "}
