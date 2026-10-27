@@ -31,7 +31,7 @@ export function SectionTitle({ children, aside }: { children: ReactNode; aside?:
   return (
     <div className="mb-3 flex items-end justify-between gap-2">
       <h2 className="display flex items-center gap-2 text-lg text-navy">
-        <span className="h-4 w-1.5 rounded-sm bg-clif" aria-hidden="true" />
+        <span className="h-4 w-1.5 rounded-sm bg-blue" aria-hidden="true" />
         {children}
       </h2>
       {aside}

@@ -9,6 +9,39 @@ import { fmtInt } from "@/lib/format";
 const AXIS = { fontSize: 12, fill: "#586178", fontWeight: 600 };
 const GRID = "#e2d8c3";
 
+// A bar drawn like the CLIF Builders wrapper: crimped zig-zag ends, a sheen down the body and a seam.
+function WrapperBar(props: unknown, horizontal = false) {
+  const { x = 0, y = 0, width = 0, height = 0, fill = "#1e6bff" } = props as { x?: number; y?: number; width?: number; height?: number; fill?: string };
+  if (width <= 0 || height <= 0) return <g />;
+  const across = horizontal ? height : width;
+  const along = horizontal ? width : height;
+  const tooth = Math.min(5, along / 4);
+  const teeth = Math.max(3, Math.round(across / 9));
+  const step = across / teeth;
+  // Path in local coordinates where "along" runs from 0 (start crimp) to `along` (end crimp).
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= teeth * 2; i++) pts.push([(i * step) / 2, i % 2 ? 0 : tooth]);
+  for (let i = teeth * 2; i >= 0; i--) pts.push([(i * step) / 2, i % 2 ? along : along - tooth]);
+  const toXY = ([a, l]: [number, number]) => (horizontal ? `${x + l},${y + a}` : `${x + a},${y + l}`);
+  const sheen = horizontal
+    ? { x: x + tooth, y: y + height * 0.18, width: Math.max(0, width - tooth * 2), height: height * 0.16 }
+    : { x: x + width * 0.18, y: y + tooth, width: width * 0.16, height: Math.max(0, height - tooth * 2) };
+  const seam = horizontal
+    ? { x1: x + tooth * 2.2, y1: y + 2, x2: x + tooth * 2.2, y2: y + height - 2 }
+    : { x1: x + 2, y1: y + tooth * 2.2, x2: x + width - 2, y2: y + tooth * 2.2 };
+  return (
+    <g>
+      <polygon points={pts.map(toXY).join(" ")} fill={fill} />
+      {along > tooth * 4 && (
+        <>
+          <rect {...sheen} fill="#ffffff" opacity={0.22} rx={2} />
+          <line {...seam} stroke="#0a2463" strokeOpacity={0.25} strokeWidth={1.5} />
+        </>
+      )}
+    </g>
+  );
+}
+
 function TooltipBox({ title, lines }: { title: string; lines: string[] }) {
   return (
     <div className="rounded-xl border border-line bg-white px-3 py-2 text-xs shadow-lg">
@@ -45,7 +78,7 @@ export function ProductBarChart({ rows, metric, unit }: { rows: ProductMetrics[]
               );
             }}
           />
-          <Bar dataKey="value" radius={[4, 4, 0, 0]} isAnimationActive={false} name={unit} maxBarSize={88}>
+          <Bar dataKey="value" shape={(p: unknown) => WrapperBar(p)} isAnimationActive={false} name={unit} maxBarSize={88}>
             {data.map((d) => (
               <Cell key={d.id} fill={productColor(d.id)} />
             ))}
@@ -82,7 +115,7 @@ export function TimelineChart({ points, interval }: { points: TimelinePoint[]; i
               );
             }}
           />
-          <Bar dataKey="tickets" fill="#1e6bff" radius={[4, 4, 0, 0]} isAnimationActive={false} name="Tickets" maxBarSize={56} />
+          <Bar dataKey="tickets" fill="#1e6bff" shape={(p: unknown) => WrapperBar(p)} isAnimationActive={false} name="Tickets" maxBarSize={56} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -106,7 +139,7 @@ export function CategoryChart({ rows }: { rows: CategoryRow[] }) {
               return <TooltipBox title={r.label} lines={[`${fmtInt(r.customers)} customers`, `${fmtInt(r.transactions)} sales`, `${fmtInt(r.tickets)} tickets`]} />;
             }}
           />
-          <Bar dataKey="customers" fill="#0b1f4b" radius={[0, 4, 4, 0]} isAnimationActive={false} name="Customers">
+          <Bar dataKey="customers" fill="#0a2463" shape={(p: unknown) => WrapperBar(p, true)} isAnimationActive={false} name="Customers">
             <LabelList dataKey="customers" position="right" style={{ fontSize: 13, fontWeight: 800, fill: "#0a1633" }} />
           </Bar>
         </BarChart>

@@ -6,7 +6,7 @@ import { useProfile } from "@/hooks/profile";
 import type { CustomerCategory, LiveState, ProductState, SaleResult, TransactionRow } from "@/lib/types";
 import type { AppError } from "@/lib/errors";
 import { MAX_QTY, computeTotals, isValidNetid, itemsPayload, normalizeNetid, type Quantities } from "@/lib/sales";
-import { CATEGORY_LABELS, CUSTOMER_CATEGORIES, productColor } from "@/lib/labels";
+import { CATEGORY_LABELS, CUSTOMER_CATEGORIES, productColor, productInk } from "@/lib/labels";
 import { fmtInt, fmtTime, plural } from "@/lib/format";
 import { InventoryPanel } from "@/components/inventory-panel";
 import { BarStack } from "@/components/brand";
@@ -81,8 +81,8 @@ function ProductCard({
         </span>
         <button
           type="button"
-          className="h-11 w-11 rounded-xl text-2xl font-black text-white disabled:opacity-30"
-          style={{ background: color }}
+          className="h-11 w-11 rounded-xl text-2xl font-black disabled:opacity-30"
+          style={{ background: color, color: productInk(product.id) }}
           disabled={disabled || !canAdd || qty >= MAX_QTY}
           onClick={() => onChange(qty + 1)}
           aria-label={`Add one ${product.name}`}
@@ -283,7 +283,7 @@ export default function SellPage() {
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase leading-tight text-muted">
               NetID
               <br />
-              <span className="text-bad">required</span>
+              <span className="text-blue">required</span>
             </span>
           </div>
           {netidTouched && netid && !netidOk && <span className="mt-1 block text-xs font-bold text-bad">Letters then digits, like abc123.</span>}

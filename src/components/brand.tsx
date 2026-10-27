@@ -62,7 +62,7 @@ export function PageHero({ kicker, title, subtitle, children }: { kicker: string
       <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/90 to-navy/25" />
       <div className="relative flex flex-wrap items-end justify-between gap-4 p-5 sm:p-6">
         <div className="min-w-0">
-          <div className="inline-block rounded-full bg-clif px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.2em]">{kicker}</div>
+          <div className="inline-block rounded-full bg-white px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.2em] text-navy">{kicker}</div>
           <h1 className="display mt-2 text-4xl leading-[0.9] sm:text-5xl">{title}</h1>
           {subtitle && <div className="mt-1.5 text-sm font-semibold text-white/80">{subtitle}</div>}
         </div>

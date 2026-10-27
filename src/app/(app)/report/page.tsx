@@ -63,7 +63,7 @@ export default function ReportPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/90 to-navy/20" />
         <div className="relative p-5 sm:p-8">
           <BrandMark />
-          <div className="mt-5 inline-block rounded-full bg-clif px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em]">Final results</div>
+          <div className="mt-5 inline-block rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-navy">Final results</div>
           <h2 className="display mt-3 max-w-xl text-5xl leading-[0.85] sm:text-7xl">
             OREO
             <br />
@@ -214,7 +214,7 @@ export default function ReportPage() {
             {r.adjustments.map((a) => (
               <li key={a.id} className="tabular flex flex-wrap justify-between gap-2 py-2">
                 <span>
-                  <b className={a.delta > 0 ? "text-good" : "text-bad"}>
+                  <b className={a.delta > 0 ? "text-good" : "text-navy"}>
                     {a.delta > 0 ? "+" : ""}
                     {a.delta} bars
                   </b>{" "}
