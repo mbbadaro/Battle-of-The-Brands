@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #0a2463;
+  --color-navy-2: #12317f;
+  --color-sky: #1447c0;
+  --color-clif: #d3202b;
+  --color-ink: #0a1633;
+  --color-blue: #1e6bff;
+  --color-blue-deep: #1450c8;
+  --color-blue-soft: #e4ecff;
+  --color-cream: #f4ecdc;
+  --color-paper: #fbf8f1;
+  --color-line: #e2d8c3;
+  --color-muted: #586178;
+  --color-good: #0f7a55;
+  --color-good-soft: #e1f3ea;
+  --color-warn: #a35a00;
+  --color-warn-soft: #fdf0dc;
+  --color-bad: #b42318;
+  --color-bad-soft: #fde7e5;
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.display {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-stretch: 72%;
+  text-transform: uppercase;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Royal-blue sky gradient from the campaign art. */
+.sky {
+  background: radial-gradient(120% 140% at 80% -20%, #3b78f0 0%, #1447c0 38%, #0a2463 100%);
+}
+
+/* Subtle diagonal wrapper stripes, echoing the bar packaging. */
+.wrapper-stripes {
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0 10px, transparent 10px 22px);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
+}
