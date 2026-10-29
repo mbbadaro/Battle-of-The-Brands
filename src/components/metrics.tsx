@@ -74,8 +74,12 @@ export function ProductTable({ rows, ranked = false }: { rows: ProductMetrics[];
             <th className="py-2 pr-2 text-right">Bars consumed</th>
             <th className="py-2 pr-2 text-right">Tickets</th>
             <th className="py-2 pr-2 text-right">% of tickets</th>
-            <th className="py-2 pr-2 text-right">% of sales with it</th>
-            <th className="py-2 text-right">Avg qty / sale with it</th>
+            <th className="py-2 pr-2 text-right" title={SALES_SHARE_DEFINITION}>
+              % of sales that include it
+            </th>
+            <th className="py-2 text-right" title={AVG_QTY_DEFINITION}>
+              Avg packages per sale that includes it
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -90,7 +94,12 @@ export function ProductTable({ rows, ranked = false }: { rows: ProductMetrics[];
               <td className="py-2.5 pr-2 text-right">{fmtInt(r.bars)}</td>
               <td className="py-2.5 pr-2 text-right font-bold">{fmtInt(r.tickets)}</td>
               <td className="py-2.5 pr-2 text-right">{fmtPct(r.ticketShare)}</td>
-              <td className="py-2.5 pr-2 text-right">{fmtPct(r.transactionShare)}</td>
+              <td className="py-2.5 pr-2 text-right">
+                {fmtPct(r.transactionShare)}
+                <span className="ml-1 text-xs text-muted">
+                  ({fmtInt(r.transactionsWith)} of {fmtInt(r.totalTransactions)})
+                </span>
+              </td>
               <td className="py-2.5 text-right">{fmtDec(r.avgQtyPerTransaction)}</td>
             </tr>
           ))}
@@ -107,6 +116,9 @@ export function ProductTable({ rows, ranked = false }: { rows: ProductMetrics[];
           </tr>
         </tbody>
       </table>
+      <p className="mt-2 text-xs text-muted">
+        {SALES_SHARE_DEFINITION} {AVG_QTY_DEFINITION}
+      </p>
     </div>
   );
 }
@@ -142,6 +154,12 @@ export function CategoryTable({ rows }: { rows: CategoryRow[] }) {
     </table>
   );
 }
+
+export const SALES_SHARE_DEFINITION =
+  "% of sales that include it = completed sales containing at least one of this package ÷ all completed sales. A sale with several products counts for each of them, so the column does not add up to 100%.";
+
+export const AVG_QTY_DEFINITION =
+  "Avg packages per sale that includes it = packages of this product sold ÷ sales containing it (1.00 means nobody bought two of the same package in one sale).";
 
 export const CATEGORY_DEFINITION =
   "Each customer (NetID) is counted once, under the most recent category they gave. Customers who never gave one are “Not specified”.";

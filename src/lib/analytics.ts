@@ -7,6 +7,8 @@ export interface ProductMetrics {
   bars: number;
   tickets: number;
   transactionsWith: number;
+  // Completed transactions overall, the denominator of transactionShare.
+  totalTransactions: number;
   // Share of all ticket revenue, 0–100.
   ticketShare: number;
   // Share of completed transactions that contain this product, 0–100.
@@ -26,6 +28,7 @@ export function productMetrics(products: ProductState[], totalTickets: number, t
     bars: p.bars_sold,
     tickets: p.tickets,
     transactionsWith: p.transactions_with,
+    totalTransactions,
     ticketShare: totalTickets > 0 ? round1((p.tickets / totalTickets) * 100) : 0,
     transactionShare: totalTransactions > 0 ? round1((p.transactions_with / totalTransactions) * 100) : 0,
     avgQtyPerTransaction: p.transactions_with > 0 ? round2(p.packages_sold / p.transactions_with) : 0,

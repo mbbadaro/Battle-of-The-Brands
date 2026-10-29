@@ -40,6 +40,8 @@ describe("product analytics", () => {
   it("computes shares and averages", () => {
     expect(rows[0].ticketShare).toBe(34.9);
     expect(rows[0].transactionShare).toBe(57.1);
+    expect(rows[0].transactionsWith).toBe(8);
+    expect(rows[0].totalTransactions).toBe(14);
     expect(rows[0].avgQtyPerTransaction).toBe(1.25);
   });
   it("lets different products lead different metrics and reports ties", () => {
