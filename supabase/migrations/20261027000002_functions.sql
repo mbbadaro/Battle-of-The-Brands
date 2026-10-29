@@ -433,8 +433,8 @@ begin
   perform private.lock_event();
   select count(*) into v_txns from public.transactions;
   select count(*) into v_adjs from public.inventory_adjustments;
-  delete from public.transactions;
-  delete from public.inventory_adjustments;
+  delete from public.transactions where true;  -- Supabase pg_safeupdate rejects a bare DELETE
+  delete from public.inventory_adjustments where true;
   update public.event_settings set sales_started_at = null, updated_at = clock_timestamp() where id = 1;
   insert into public.audit_log (actor_id, action, entity, entity_id, details)
   values (auth.uid(), 'event_data_reset', 'event_settings', '1',
