@@ -338,6 +338,10 @@ test("AT12 voided transactions never inflate totals", async () => {
   assert.equal(d.categories.reduce((s, c) => s + c.tickets, 0), d.kpis.total_tickets);
   assert.equal(d.categories.reduce((s, c) => s + c.transactions, 0), d.kpis.transactions);
   assert.equal(d.timeline.reduce((s, b) => s + b.tickets, 0), d.kpis.total_tickets);
+  const perMinute = await rpc(users.admin, "get_sales_timeline");
+  assert.equal(perMinute.reduce((s, b) => s + b.tickets, 0), d.kpis.total_tickets);
+  assert.equal(perMinute.reduce((s, b) => s + b.transactions, 0), d.kpis.transactions);
+  assert.ok(perMinute.every((b) => new Date(b.bucket).getUTCSeconds() === 0), "buckets start on the minute");
   assert.equal(d.categories.length, 5);
   assert.equal(d.categories.find((c) => c.category === "second_year_mba").customers, 1);
 });

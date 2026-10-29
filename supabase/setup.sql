@@ -988,3 +988,58 @@ end $$;
 
 revoke execute on function public.set_product_package(text, integer, integer) from public, anon;
 grant execute on function public.set_product_package(text, integer, integer) to authenticated;
+
+-- Sale JSON now also carries the package sizes each item was sold at, so the
+-- history detail shows the recorded values instead of today's package.
+create or replace function private.txn_json(p_id bigint) returns jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object(
+    'id', t.id,
+    'created_at', t.created_at,
+    'netid', t.netid,
+    'customer_name', t.customer_name,
+    'customer_category', t.customer_category,
+    'items', coalesce((
+      select jsonb_object_agg(i.product_id, i.quantity) from public.transaction_items i where i.transaction_id = t.id
+    ), '{}'::jsonb),
+    'item_units', coalesce((
+      select jsonb_object_agg(i.product_id, jsonb_build_object('bars', i.bars_per_unit, 'tickets', i.tickets_per_unit))
+      from public.transaction_items i where i.transaction_id = t.id
+    ), '{}'::jsonb),
+    'total_bars', t.total_bars,
+    'total_tickets', t.total_tickets,
+    'seller_id', t.seller_id,
+    'seller_name', s.display_name,
+    'status', t.status,
+    'voided_at', t.voided_at,
+    'voided_by_name', v.display_name,
+    'void_reason', t.void_reason
+  )
+  from public.transactions t
+  join public.profiles s on s.id = t.seller_id
+  left join public.profiles v on v.id = t.voided_by
+  where t.id = p_id
+$$;
+revoke execute on function private.txn_json(bigint) from public;
+
+-- ===== supabase/migrations/20261029000004_sales_timeline_per_minute.sql =====
+-- Sales timeline in 1-minute buckets (UTC-aligned) for the dashboard and report charts.
+-- Kept as its own function so get_dashboard (and its 15-minute 'timeline') stays untouched.
+create or replace function public.get_sales_timeline() returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  perform private.require_team();
+  return (
+    select coalesce(jsonb_agg(jsonb_build_object(
+             'bucket', b.bucket, 'transactions', b.txns, 'tickets', b.tickets, 'bars', b.bars) order by b.bucket), '[]'::jsonb)
+    from (
+      select date_bin('1 minute', created_at, timestamptz '2000-01-01 00:00:00+00') as bucket,
+             count(*)::int as txns, sum(total_tickets)::int as tickets, sum(total_bars)::int as bars
+      from public.transactions where status = 'completed'
+      group by 1
+    ) b
+  );
+end $$;
+
+revoke execute on function public.get_sales_timeline() from public, anon;
+grant execute on function public.get_sales_timeline() to authenticated;
