@@ -7,12 +7,12 @@ export interface ProductMetrics {
   bars: number;
   tickets: number;
   transactionsWith: number;
-  // Completed transactions overall, the denominator of transactionShare.
-  totalTransactions: number;
+  // Packages of all products sold, the denominator of packageShare.
+  totalPackages: number;
   // Share of all ticket revenue, 0–100.
   ticketShare: number;
-  // Share of completed transactions that contain this product, 0–100.
-  transactionShare: number;
+  // Share of all packages sold, 0–100. Adds up to 100% across products.
+  packageShare: number;
   // Packages per transaction that contains this product.
   avgQtyPerTransaction: number;
 }
@@ -20,7 +20,8 @@ export interface ProductMetrics {
 const round1 = (n: number) => Math.round(n * 10) / 10;
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export function productMetrics(products: ProductState[], totalTickets: number, totalTransactions: number): ProductMetrics[] {
+export function productMetrics(products: ProductState[], totalTickets: number): ProductMetrics[] {
+  const totalPackages = products.reduce((sum, p) => sum + p.packages_sold, 0);
   return products.map((p) => ({
     id: p.id,
     name: p.name,
@@ -28,9 +29,9 @@ export function productMetrics(products: ProductState[], totalTickets: number, t
     bars: p.bars_sold,
     tickets: p.tickets,
     transactionsWith: p.transactions_with,
-    totalTransactions,
+    totalPackages,
     ticketShare: totalTickets > 0 ? round1((p.tickets / totalTickets) * 100) : 0,
-    transactionShare: totalTransactions > 0 ? round1((p.transactions_with / totalTransactions) * 100) : 0,
+    packageShare: totalPackages > 0 ? round1((p.packages_sold / totalPackages) * 100) : 0,
     avgQtyPerTransaction: p.transactions_with > 0 ? round2(p.packages_sold / p.transactions_with) : 0,
   }));
 }

@@ -34,14 +34,13 @@ describe("sale totals", () => {
 describe("product analytics", () => {
   const rows = productMetrics(
     [state("single_bar", "Single Bar", 10, 10, 30, 8), state("week_pack", "Week Pack", 4, 12, 24, 4), state("exam_week_bundle", "Exam Week Bundle", 4, 20, 32, 4)],
-    86,
-    14
+    86
   );
   it("computes shares and averages", () => {
     expect(rows[0].ticketShare).toBe(34.9);
-    expect(rows[0].transactionShare).toBe(57.1);
-    expect(rows[0].transactionsWith).toBe(8);
-    expect(rows[0].totalTransactions).toBe(14);
+    expect(rows[0].packageShare).toBe(55.6);
+    expect(rows[0].totalPackages).toBe(18);
+    expect(rows.reduce((s, r) => s + r.packageShare, 0)).toBeCloseTo(100, 0);
     expect(rows[0].avgQtyPerTransaction).toBe(1.25);
   });
   it("lets different products lead different metrics and reports ties", () => {
@@ -52,7 +51,7 @@ describe("product analytics", () => {
     expect(h.slowest?.names).toEqual(["Week Pack", "Exam Week Bundle"]);
   });
   it("returns no highlights without sales", () => {
-    expect(highlights(productMetrics([state("a", "A", 0, 0, 0, 0)], 0, 0)).bestByPackages).toBeNull();
+    expect(highlights(productMetrics([state("a", "A", 0, 0, 0, 0)], 0)).bestByPackages).toBeNull();
   });
 });
 

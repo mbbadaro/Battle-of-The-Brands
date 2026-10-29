@@ -16,7 +16,7 @@ export default function DashboardPage() {
   if (loading && !d) return <LoadingBlock label="Loading dashboard…" />;
   if (!d) return <Notice tone="bad">{error?.message ?? "Could not load the dashboard."}</Notice>;
 
-  const rows = productMetrics(d.products, d.kpis.total_tickets, d.kpis.transactions);
+  const rows = productMetrics(d.products, d.kpis.total_tickets);
   const h = highlights(rows);
   const timeline = buildTimeline(d.timeline, d.settings.timezone);
   const hasSales = d.kpis.transactions > 0;

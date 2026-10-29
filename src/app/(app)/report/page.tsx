@@ -25,7 +25,7 @@ export default function ReportPage() {
   if (!r) return <Notice tone="bad">{error?.message ?? "Could not load the report."}</Notice>;
 
   const tz = r.settings.timezone;
-  const rows = ranking(productMetrics(r.products, r.kpis.total_tickets, r.kpis.transactions));
+  const rows = ranking(productMetrics(r.products, r.kpis.total_tickets));
   const timeline = buildTimeline(r.timeline, tz);
   const hasSales = r.kpis.transactions > 0;
   const stamp = new Date().toISOString().slice(0, 10);

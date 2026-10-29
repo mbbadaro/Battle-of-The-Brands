@@ -3,7 +3,7 @@ import type { ProductMetrics } from "@/lib/analytics";
 import type { Inventory, ProductState } from "@/lib/types";
 import { productColor, productInk } from "@/lib/labels";
 import { fmtInt, fmtPct } from "@/lib/format";
-import { SALES_SHARE_DEFINITION } from "@/components/metrics";
+import { PACKAGE_SHARE_DEFINITION } from "@/components/metrics";
 
 // An OREO-style cookie with the rank in the middle.
 export function CookieMedal({ rank, size = 56 }: { rank: number; size?: number }) {
@@ -124,11 +124,11 @@ export function Podium({ rows }: { rows: ProductMetrics[] }) {
                     <dt className="text-[10px] font-black uppercase text-muted">Bars</dt>
                     <dd className="text-lg font-black text-navy">{fmtInt(p.bars)}</dd>
                   </div>
-                  <div className="rounded-xl bg-cream/70 py-2" title={SALES_SHARE_DEFINITION}>
-                    <dt className="text-[10px] font-black uppercase text-muted">Sales incl. it</dt>
-                    <dd className="text-lg font-black text-navy">{fmtPct(p.transactionShare)}</dd>
+                  <div className="rounded-xl bg-cream/70 py-2" title={PACKAGE_SHARE_DEFINITION}>
+                    <dt className="text-[10px] font-black uppercase text-muted">Of packages</dt>
+                    <dd className="text-lg font-black text-navy">{fmtPct(p.packageShare)}</dd>
                     <dd className="text-[10px] font-bold text-muted">
-                      {fmtInt(p.transactionsWith)} of {fmtInt(p.totalTransactions)}
+                      {fmtInt(p.packages)} of {fmtInt(p.totalPackages)}
                     </dd>
                   </div>
                 </dl>
