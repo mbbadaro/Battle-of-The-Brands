@@ -113,7 +113,7 @@ export interface Report extends Dashboard {
 export interface TransactionRow {
   id: number;
   created_at: string;
-  netid: string;
+  netid: string | null;
   customer_name: string | null;
   customer_category: CustomerCategory | null;
   items: Record<string, number>;

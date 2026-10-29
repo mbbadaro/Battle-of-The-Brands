@@ -34,7 +34,7 @@ Supabase
 | `profiles` | One row per team member: name, email, role (`pending`, `seller`, `admin`). Created by a trigger on sign-up. |
 | `event_settings` | Singleton: initial inventory (200), time zone, `sales_started_at` (locks initial inventory), duplicate-NetID window (120 s), seller undo window (5 min). |
 | `products` | The three products, with bars and tickets per package and an `active` flag. |
-| `transactions` | One row per sale: NetID, optional name and category, total bars and tickets, seller, status (`completed`/`voided`), void time, voider and reason, `client_request_id`. |
+| `transactions` | One row per sale: optional NetID, name and category, total bars and tickets, seller, status (`completed`/`voided`), void time, voider and reason, `client_request_id`. |
 | `transaction_items` | Quantity per product per sale, with the unit bars and tickets copied at sale time. |
 | `inventory_adjustments` | Restocks and corrections: signed `delta`, required reason, who and when. |
 | `audit_log` | Append-only record of sign-ups, role changes, inventory settings, adjustments, availability changes, voids and resets. |
@@ -48,7 +48,7 @@ Migrations: `supabase/migrations/` (schema and RLS, functions, product and inven
 - **Seller:** records sales, sees inventory, dashboard and report, sees only the sales they recorded, and can undo their own sale within 5 minutes (reason required).
 - **Admin:** everything a seller can do, plus sets initial inventory (before the first sale), records restocks and corrections, turns products on and off, edits how many bars and tickets each package has (past sales keep the values they were sold at), approves and changes roles, sees all transactions, voids any sale, exports CSV, reads the audit log, and can reset rehearsal data.
 - Row level security is on for every table. Clients have **no** insert, update or delete rights on any table. `anon` has no table access and cannot call any function. Every function is `SECURITY DEFINER` with an empty `search_path` and checks the role itself.
-- Privacy: NetID is required, while name and category are optional. The dashboard and report show only aggregates, with no NetIDs or names. The CSV export and the full history are for admins only.
+- Privacy: NetID, name and category are all optional (a NetID, when given, must look like `abc123`). The dashboard and report show only aggregates, with no NetIDs or names. The CSV export and the full history are for admins only.
 
 ## Setup
 
@@ -89,7 +89,7 @@ Any Node host that runs `npm run build && npm start` works too (Netlify, Render,
 3. Do a rehearsal: record a few sales on two phones, void one, and check the dashboard. Then, in **Admin → Reset rehearsal data**, type `RESET ALL SALES`. This deletes test sales and adjustments, keeps the team and the audit log, and unlocks initial inventory again.
 
 **Recording a sale (Sell tab, about 5 seconds)**
-1. Type the customer's NetID (for example `abc123`; `@cornell.edu` is stripped automatically).
+1. Optionally type the customer's NetID (for example `abc123`; `@cornell.edu` is stripped automatically). Leave it blank if they don't want to give one.
 2. Tap the product cards or **+** for each product. The bottom bar shows bars, tickets and bars left after the sale.
 3. Optionally open *Customer name & category*.
 4. Tap **Record sale · N tickets**. A green banner confirms it, and the form clears for the next customer.
@@ -112,12 +112,12 @@ All figures come from database records and exclude voided transactions.
 - **Packages sold** (per product) = Σ quantity of that product in completed transactions.
 - **Bars remaining** = initial + positive adjustments − negative adjustments − bars sold.
 - **% inventory sold / utilization** = bars sold ÷ (initial + positive − negative adjustments) × 100.
-- **Unique customers** = distinct NetIDs with a completed transaction.
+- **Unique customers** = distinct NetIDs with a completed transaction, plus one for each completed sale recorded without a NetID.
 - **Average tickets per transaction** = tickets earned ÷ completed transactions.
 - **% of tickets** (per product) = product tickets ÷ tickets earned.
 - **% of packages sold** = packages of the product ÷ packages of all products, in completed sales. Adds up to 100% across products (up to rounding).
 - **Average packages per sale that includes the product** = packages ÷ completed sales that include it.
-- **Customer category**: each NetID is counted once, under the most recent category it gave. NetIDs that never gave one are "Not specified". Customers, sales and tickets per category therefore add up exactly to the totals.
+- **Customer category**: each NetID is counted once, under the most recent category it gave. NetIDs that never gave one are "Not specified". A sale without a NetID counts as its own customer. Customers, sales and tickets per category therefore add up exactly to the totals.
 - **Highlights**: best seller = most packages; top revenue = most tickets; most inventory = most bars; slowest = fewest packages. Ties are shown together.
 
 ## Tests
@@ -125,7 +125,7 @@ All figures come from database records and exclude voided transactions.
 | Command | What it checks |
 |---|---|
 | `npm test` | Unit tests: sale formulas, NetID rules, analytics, highlights and ties, timeline, CSV escaping. |
-| `npm run test:db` | 26 database tests that run the real migrations on PostgreSQL (with a small stand-in for Supabase's `auth` schema): all 12 acceptance scenarios, 60 concurrent sales, idempotent retries, duplicate-NetID prompt, RLS (no direct writes, sellers can't see others' sales, `anon` blocked), restart persistence (`PG_RESTART_CMD`), reset. Needs a Postgres at `PGHOST`/`PGPORT` (default `127.0.0.1:5433`). |
-| `npm run test:e2e` | 19 browser checks with Playwright: two separate devices (a phone and a laptop) using the production build against a test gateway (`tests/e2e/mock-supabase.mjs`) that speaks the Supabase Auth, RPC and Realtime protocols over the real migrated database. It covers every acceptance scenario, including the realtime sync between devices, the two-device race for the last 5 bars, and comparing the CSV download with the database. |
+| `npm run test:db` | 27 database tests that run the real migrations on PostgreSQL (with a small stand-in for Supabase's `auth` schema): all 12 acceptance scenarios, 60 concurrent sales, idempotent retries, duplicate-NetID prompt, RLS (no direct writes, sellers can't see others' sales, `anon` blocked), restart persistence (`PG_RESTART_CMD`), reset. Needs a Postgres at `PGHOST`/`PGPORT` (default `127.0.0.1:5433`). |
+| `npm run test:e2e` | 20 browser checks with Playwright: two separate devices (a phone and a laptop) using the production build against a test gateway (`tests/e2e/mock-supabase.mjs`) that speaks the Supabase Auth, RPC and Realtime protocols over the real migrated database. It covers every acceptance scenario, including the realtime sync between devices, the two-device race for the last 5 bars, and comparing the CSV download with the database. |
 
 The test gateway exists only because a full local Supabase stack (Docker) wasn't available in the build environment. Against a real Supabase project the app talks to Supabase directly.

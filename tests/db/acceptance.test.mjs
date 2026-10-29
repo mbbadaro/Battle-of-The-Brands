@@ -210,8 +210,16 @@ test("AT5 sale without name or category succeeds with only a NetID", async () =>
   assert.equal(r.transaction.customer_category, null);
 });
 
-test("validation: NetID required, at least one product, whole quantities, known products", async () => {
-  await rejects(sale(users.seller1, "", { single_bar: 1 }), "INVALID_NETID");
+test("NetID is optional: blank or missing records a sale with no NetID and no duplicate prompt", async () => {
+  const a = await sale(users.seller1, "", { single_bar: 1 });
+  assert.equal(a.transaction.netid, null);
+  const b = await sale(users.seller2, "   ", { single_bar: 1 });
+  assert.equal(b.transaction.netid, null);
+  const c = await sale(users.seller1, null, { single_bar: 1 }, { category: "faculty" });
+  assert.equal(c.transaction.netid, null);
+});
+
+test("validation: NetID format when given, at least one product, whole quantities, known products", async () => {
   await rejects(sale(users.seller1, "not a netid!", { single_bar: 1 }), "INVALID_NETID");
   await rejects(sale(users.seller1, "zz1", {}), "EMPTY_SALE");
   await rejects(sale(users.seller1, "zz1", { single_bar: 0, week_pack: 0 }), "EMPTY_SALE");
@@ -335,6 +343,11 @@ test("AT12 voided transactions never inflate totals", async () => {
   assert.equal(d.products.reduce((s, p) => s + p.bars_sold, 0), d.kpis.total_bars);
   assert.equal(d.products.reduce((s, p) => s + p.tickets, 0), d.kpis.total_tickets);
   assert.equal(d.categories.reduce((s, c) => s + c.customers, 0), d.kpis.unique_customers);
+  // Each sale without a NetID counts as its own customer.
+  const [cust] = await superQuery(
+    "select (count(distinct netid) + count(*) filter (where netid is null))::int as n from transactions where status = 'completed'"
+  );
+  assert.equal(d.kpis.unique_customers, cust.n);
   assert.equal(d.categories.reduce((s, c) => s + c.tickets, 0), d.kpis.total_tickets);
   assert.equal(d.categories.reduce((s, c) => s + c.transactions, 0), d.kpis.transactions);
   assert.equal(d.timeline.reduce((s, b) => s + b.tickets, 0), d.kpis.total_tickets);
@@ -354,7 +367,7 @@ test("AT11 CSV export matches the database records", async () => {
   const col = (name) => header.indexOf(name);
   body.forEach((r, i) => {
     assert.equal(Number(r[col("transaction_id")]), Number(db[i].id));
-    assert.equal(r[col("netid")], db[i].netid);
+    assert.equal(r[col("netid")], db[i].netid ?? "");
     assert.equal(Number(r[col("bars_consumed")]), db[i].total_bars);
     assert.equal(Number(r[col("tickets_charged")]), db[i].total_tickets);
     assert.equal(r[col("status")], db[i].status);

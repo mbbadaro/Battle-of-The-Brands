@@ -63,7 +63,7 @@ export function transactionsToCsv(rows: TransactionRow[], products: CsvProduct[]
     r.id,
     r.created_at,
     formatLocal(r.created_at, timeZone),
-    r.netid,
+    r.netid ?? "",
     r.customer_name ?? "",
     r.customer_category ? CATEGORY_TEXT[r.customer_category] ?? r.customer_category : "",
     ...products.map((p) => r.items[p.id] ?? 0),

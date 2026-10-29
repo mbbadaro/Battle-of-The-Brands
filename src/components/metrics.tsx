@@ -26,7 +26,7 @@ export function KpiGrid({ d }: { d: Dashboard }) {
       <KpiCard label="Bars remaining" value={fmtInt(d.inventory.remaining)} />
       <KpiCard label="Inventory sold" value={fmtPct(d.inventory.pct_sold)} sub="bars sold ÷ bars available" />
       <KpiCard label="Transactions" value={fmtInt(k.transactions)} sub={d.voided.count ? `${fmtInt(d.voided.count)} voided, not counted` : undefined} />
-      <KpiCard label="Unique customers" value={fmtInt(k.unique_customers)} sub="distinct NetIDs" />
+      <KpiCard label="Unique customers" value={fmtInt(k.unique_customers)} sub="NetIDs + no-NetID sales" />
       <KpiCard label="Avg tickets / sale" value={fmtDec(k.avg_tickets_per_transaction)} sub="tickets ÷ transactions" />
       <KpiCard label="Avg bars / sale" value={fmtDec(k.avg_bars_per_transaction)} sub="bars ÷ transactions" />
     </div>
@@ -161,4 +161,4 @@ export const AVG_QTY_DEFINITION =
   "Avg packages per sale that includes it = packages of this product sold ÷ sales containing it (1.00 means nobody bought two of the same package in one sale).";
 
 export const CATEGORY_DEFINITION =
-  "Each customer (NetID) is counted once, under the most recent category they gave. Customers who never gave one are “Not specified”.";
+  "Each customer (NetID) is counted once, under the most recent category they gave. Customers who never gave one are “Not specified”. A sale without a NetID counts as its own customer.";

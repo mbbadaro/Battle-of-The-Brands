@@ -7,6 +7,7 @@ import type { AdminState, LiveState, TransactionRow } from "@/lib/types";
 import { CATEGORY_LABELS, CUSTOMER_CATEGORIES } from "@/lib/labels";
 import { fmtDateTime, fmtInt } from "@/lib/format";
 import { useExportCsv } from "@/hooks/export";
+import { netidLabel } from "@/lib/sales";
 import { Button, Card, EmptyState, LoadingBlock, Notice, Spinner, inputClass, selectClass } from "@/components/ui";
 import { Modal, VoidDialog } from "@/components/void-dialog";
 import { PageHero } from "@/components/brand";
@@ -170,7 +171,7 @@ export default function HistoryPage() {
                 <button className="w-full rounded-2xl border border-line bg-paper p-3 text-left" onClick={() => setDetail(t)}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-black text-navy">
-                      #{t.id} · {t.netid}
+                      #{t.id} · {netidLabel(t.netid)}
                     </span>
                     <StatusBadge status={t.status} />
                   </div>
@@ -216,7 +217,7 @@ export default function HistoryPage() {
                   <tr key={t.id} className={`border-b border-line hover:bg-blue-soft/40 ${t.status === "voided" ? "text-muted" : ""}`}>
                     <td className="px-3 py-2 font-bold text-navy">#{t.id}</td>
                     <td className="whitespace-nowrap px-2 py-2">{fmtDateTime(t.created_at, tz)}</td>
-                    <td className="px-2 py-2 font-bold">{t.netid}</td>
+                    <td className="px-2 py-2 font-bold">{netidLabel(t.netid)}</td>
                     <td className="px-2 py-2">{t.customer_name ?? "—"}</td>
                     <td className="px-2 py-2">{t.customer_category ? CATEGORY_LABELS[t.customer_category] : "—"}</td>
                     {products.map((p) => (
@@ -269,7 +270,7 @@ export default function HistoryPage() {
             <dt className="text-muted">Seller</dt>
             <dd>{detail.seller_name}</dd>
             <dt className="text-muted">NetID</dt>
-            <dd className="font-bold">{detail.netid}</dd>
+            <dd className="font-bold">{netidLabel(detail.netid)}</dd>
             <dt className="text-muted">Name</dt>
             <dd>{detail.customer_name ?? "Not provided"}</dd>
             <dt className="text-muted">Category</dt>
@@ -319,7 +320,7 @@ export default function HistoryPage() {
       {voiding && (
         <VoidDialog
           transactionId={voiding.id}
-          summary={`${voiding.netid} · ${voiding.total_tickets} tickets · ${voiding.total_bars} bars`}
+          summary={`${netidLabel(voiding.netid)} · ${voiding.total_tickets} tickets · ${voiding.total_bars} bars`}
           onClose={() => setVoiding(null)}
           onDone={() => {
             setVoiding(null);

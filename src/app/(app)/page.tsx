@@ -5,7 +5,7 @@ import { callRpc, useLive, useRpc } from "@/hooks/live";
 import { useProfile } from "@/hooks/profile";
 import type { CustomerCategory, LiveState, ProductState, SaleResult, TransactionRow } from "@/lib/types";
 import type { AppError } from "@/lib/errors";
-import { MAX_QTY, computeTotals, isValidNetid, itemsPayload, normalizeNetid, type Quantities } from "@/lib/sales";
+import { MAX_QTY, computeTotals, isValidNetid, itemsPayload, netidLabel, normalizeNetid, type Quantities } from "@/lib/sales";
 import { CATEGORY_LABELS, CUSTOMER_CATEGORIES, productColor, productInk } from "@/lib/labels";
 import { fmtInt, fmtTime, plural } from "@/lib/format";
 import { InventoryPanel } from "@/components/inventory-panel";
@@ -133,7 +133,8 @@ export default function SellPage() {
   const remaining = live.data?.inventory.remaining ?? 0;
   const after = remaining - totals.bars;
   const insufficient = totals.bars > 0 && after < 0;
-  const netidOk = isValidNetid(netid);
+  // NetID is optional: blank is fine, but anything typed must look like a NetID.
+  const netidOk = !netid.trim() || isValidNetid(netid);
   const canSubmit = !!live.data && totals.bars > 0 && netidOk && !insufficient && !submitting;
 
   function setProductQty(id: string, q: number) {
@@ -155,7 +156,7 @@ export default function SellPage() {
     setNetidTouched(true);
     if (inFlight.current) return;
     if (!netidOk) {
-      setError({ code: "INVALID_NETID", message: "Enter the customer's Cornell NetID, for example abc123." });
+      setError({ code: "INVALID_NETID", message: "That doesn't look like a Cornell NetID (for example abc123). Fix it or leave it blank." });
       netidRef.current?.focus();
       return;
     }
@@ -172,7 +173,7 @@ export default function SellPage() {
     requestId.current ??= newRequestId();
     const args = {
       p_client_request_id: requestId.current,
-      p_netid: normalizeNetid(netid),
+      p_netid: normalizeNetid(netid) || null,
       p_items: itemsPayload(products, qty),
       p_customer_name: name.trim() || null,
       p_customer_category: category,
@@ -231,7 +232,7 @@ export default function SellPage() {
               {success.duplicate_request ? "Already recorded" : "Sale recorded"} · {success.transaction.total_tickets} tickets
             </div>
             <div className="truncate text-[13px] font-semibold text-white/85">
-              #{success.transaction.id} · {success.transaction.netid} · {plural(success.transaction.total_bars, "bar")} ·{" "}
+              #{success.transaction.id} · {netidLabel(success.transaction.netid)} · {plural(success.transaction.total_bars, "bar")} ·{" "}
               {fmtInt(success.inventory.remaining)} left
             </div>
           </div>
@@ -251,7 +252,7 @@ export default function SellPage() {
         }}
       >
         <label className="block">
-          <span className="sr-only">Customer Cornell NetID (required)</span>
+          <span className="sr-only">Customer Cornell NetID (optional)</span>
           <div className="relative">
             <input
               ref={netidRef}
@@ -283,7 +284,7 @@ export default function SellPage() {
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-black uppercase leading-tight text-muted">
               NetID
               <br />
-              <span className="text-blue">required</span>
+              <span className="text-blue">optional</span>
             </span>
           </div>
           {netidTouched && netid && !netidOk && <span className="mt-1 block text-xs font-bold text-bad">Letters then digits, like abc123.</span>}
@@ -379,7 +380,7 @@ export default function SellPage() {
               ) : totals.bars === 0 ? (
                 "Select products"
               ) : !netidOk ? (
-                "Enter NetID to record"
+                "Fix NetID to record"
               ) : (
                 `Record sale · ${totals.tickets} tickets`
               )}
@@ -398,7 +399,7 @@ export default function SellPage() {
               <li key={t.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
                 <div className="min-w-0 flex-1">
                   <div className="font-bold text-navy">
-                    #{t.id} · {t.netid}{" "}
+                    #{t.id} · {netidLabel(t.netid)}{" "}
                     {t.status === "voided" && <span className="rounded bg-bad-soft px-1.5 text-xs font-black uppercase text-bad">voided</span>}
                   </div>
                   <div className="text-xs text-muted">
@@ -437,7 +438,7 @@ export default function SellPage() {
       {voiding && (
         <VoidDialog
           transactionId={voiding.id}
-          summary={`${voiding.netid} · ${voiding.total_tickets} tickets · ${plural(voiding.total_bars, "bar")}`}
+          summary={`${netidLabel(voiding.netid)} · ${voiding.total_tickets} tickets · ${plural(voiding.total_bars, "bar")}`}
           onClose={() => setVoiding(null)}
           onDone={() => {
             setVoiding(null);
