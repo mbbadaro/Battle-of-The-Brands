@@ -274,14 +274,18 @@ export default function HistoryPage() {
             <dd>{detail.customer_name ?? "Not provided"}</dd>
             <dt className="text-muted">Category</dt>
             <dd>{detail.customer_category ? CATEGORY_LABELS[detail.customer_category] : "Not provided"}</dd>
-            {products.map((p) => (
-              <div key={p.id} className="contents">
-                <dt className="text-muted">{p.name}</dt>
-                <dd>
-                  {detail.items[p.id] ?? 0} × ({p.bars_per_unit} bar{p.bars_per_unit > 1 ? "s" : ""}, {p.tickets_per_unit} tickets)
-                </dd>
-              </div>
-            ))}
+            {products.map((p) => {
+              // Show the package size this sale was recorded at, not today's.
+              const unit = detail.item_units?.[p.id] ?? { bars: p.bars_per_unit, tickets: p.tickets_per_unit };
+              return (
+                <div key={p.id} className="contents">
+                  <dt className="text-muted">{p.name}</dt>
+                  <dd>
+                    {detail.items[p.id] ?? 0} × ({unit.bars} bar{unit.bars > 1 ? "s" : ""}, {unit.tickets} tickets)
+                  </dd>
+                </div>
+              );
+            })}
             <dt className="text-muted">Bars consumed</dt>
             <dd className="font-bold">{detail.total_bars}</dd>
             <dt className="text-muted">Tickets charged</dt>

@@ -422,6 +422,45 @@ test("product availability blocks sales of that product only", async () => {
   await rpc(users.admin, "set_product_active", { p_product_id: "week_pack", p_active: true });
 });
 
+test("admins change package bars and tickets; past sales keep their recorded values", async () => {
+  await rpc(users.admin, "adjust_inventory", { p_kind: "restock", p_delta: 10, p_reason: "package test" });
+  const before = await sale(users.seller1, "pk1", { week_pack: 1 });
+  assert.equal(before.transaction.total_bars, 3);
+  assert.equal(before.transaction.total_tickets, 6);
+
+  await rejects(rpc(users.seller1, "set_product_package", { p_product_id: "week_pack", p_bars: 4, p_tickets: 7 }), "NOT_AUTHORIZED");
+  await rejects(rpc(users.admin, "set_product_package", { p_product_id: "week_pack", p_bars: 0, p_tickets: 7 }), "INVALID_PACKAGE");
+  await rejects(rpc(users.admin, "set_product_package", { p_product_id: "week_pack", p_bars: 4, p_tickets: 0 }), "INVALID_PACKAGE");
+  await rejects(rpc(users.admin, "set_product_package", { p_product_id: "nope", p_bars: 4, p_tickets: 7 }), "NOT_FOUND");
+
+  const changed = await rpc(users.admin, "set_product_package", { p_product_id: "week_pack", p_bars: 4, p_tickets: 7 });
+  assert.equal(changed.changed, true);
+  const live = await rpc(users.seller1, "get_live_state");
+  const wp = live.products.find((p) => p.id === "week_pack");
+  assert.deepEqual([wp.bars_per_unit, wp.tickets_per_unit, wp.tagline], [4, 7, "4 protein bars"]);
+
+  const after = await sale(users.seller1, "pk1", { week_pack: 1 }, { confirm: true });
+  assert.equal(after.transaction.total_bars, 4);
+  assert.equal(after.transaction.total_tickets, 7);
+
+  const items = await superQuery(
+    "select transaction_id, bars, tickets from transaction_items where transaction_id = any($1) order by transaction_id",
+    [[before.transaction.id, after.transaction.id]]
+  );
+  assert.deepEqual(items.map((i) => [i.bars, i.tickets]), [[3, 6], [4, 7]]);
+  const [t] = await superQuery("select total_bars, total_tickets from transactions where id = $1", [before.transaction.id]);
+  assert.deepEqual([t.total_bars, t.total_tickets], [3, 6]);
+  const hist = await rpc(users.admin, "export_transactions");
+  assert.deepEqual(hist.find((r) => r.id === before.transaction.id).item_units, { week_pack: { bars: 3, tickets: 6 } });
+  assert.deepEqual(hist.find((r) => r.id === after.transaction.id).item_units, { week_pack: { bars: 4, tickets: 7 } });
+
+  const [log] = await superQuery("select details from audit_log where action = 'product_package_changed' order by id desc limit 1");
+  assert.deepEqual(log.details, { name: "Week Pack", bars_from: 3, bars_to: 4, tickets_from: 6, tickets_to: 7 });
+
+  assert.equal((await rpc(users.admin, "set_product_package", { p_product_id: "week_pack", p_bars: 3, p_tickets: 6 })).changed, true);
+  assert.equal((await rpc(users.admin, "set_product_package", { p_product_id: "week_pack", p_bars: 3, p_tickets: 6 })).changed, false);
+});
+
 test("AT9 data persists across a database restart", async () => {
   if (!process.env.PG_RESTART_CMD) {
     console.log("    skipped restart (set PG_RESTART_CMD to run it)");

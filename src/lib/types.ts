@@ -117,6 +117,8 @@ export interface TransactionRow {
   customer_name: string | null;
   customer_category: CustomerCategory | null;
   items: Record<string, number>;
+  // Package size each item was sold at (bars and tickets per package).
+  item_units?: Record<string, { bars: number; tickets: number }>;
   total_bars: number;
   total_tickets: number;
   seller_id: string;

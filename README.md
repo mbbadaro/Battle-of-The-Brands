@@ -40,13 +40,13 @@ Supabase
 | `audit_log` | Append-only record of sign-ups, role changes, inventory settings, adjustments, availability changes, voids and resets. |
 | `live_ticker` | Version counter for realtime refresh. |
 
-Migrations: `supabase/migrations/` (schema and RLS, functions, product and inventory configuration). `supabase/setup.sql` is the same three files joined, for pasting into the SQL editor.
+Migrations: `supabase/migrations/` (schema and RLS, functions, product and inventory configuration). `supabase/setup.sql` is all the migration files joined (`npm run db:bundle`), for pasting into the SQL editor.
 
 ### Authentication and permissions
 
 - Email and password through Supabase Auth. **The first account created becomes the admin.** Everyone after that starts as `pending` and cannot see or do anything until an admin approves them in Admin → Team.
 - **Seller:** records sales, sees inventory, dashboard and report, sees only the sales they recorded, and can undo their own sale within 5 minutes (reason required).
-- **Admin:** everything a seller can do, plus sets initial inventory (before the first sale), records restocks and corrections, turns products on and off, approves and changes roles, sees all transactions, voids any sale, exports CSV, reads the audit log, and can reset rehearsal data.
+- **Admin:** everything a seller can do, plus sets initial inventory (before the first sale), records restocks and corrections, turns products on and off, edits how many bars and tickets each package has (past sales keep the values they were sold at), approves and changes roles, sees all transactions, voids any sale, exports CSV, reads the audit log, and can reset rehearsal data.
 - Row level security is on for every table. Clients have **no** insert, update or delete rights on any table. `anon` has no table access and cannot call any function. Every function is `SECURITY DEFINER` with an empty `search_path` and checks the role itself.
 - Privacy: NetID is required, while name and category are optional. The dashboard and report show only aggregates, with no NetIDs or names. The CSV export and the full history are for admins only.
 
@@ -125,7 +125,7 @@ All figures come from database records and exclude voided transactions.
 | Command | What it checks |
 |---|---|
 | `npm test` | Unit tests: sale formulas, NetID rules, analytics, highlights and ties, timeline, CSV escaping. |
-| `npm run test:db` | 25 database tests that run the real migrations on PostgreSQL (with a small stand-in for Supabase's `auth` schema): all 12 acceptance scenarios, 60 concurrent sales, idempotent retries, duplicate-NetID prompt, RLS (no direct writes, sellers can't see others' sales, `anon` blocked), restart persistence (`PG_RESTART_CMD`), reset. Needs a Postgres at `PGHOST`/`PGPORT` (default `127.0.0.1:5433`). |
+| `npm run test:db` | 26 database tests that run the real migrations on PostgreSQL (with a small stand-in for Supabase's `auth` schema): all 12 acceptance scenarios, 60 concurrent sales, idempotent retries, duplicate-NetID prompt, RLS (no direct writes, sellers can't see others' sales, `anon` blocked), restart persistence (`PG_RESTART_CMD`), reset. Needs a Postgres at `PGHOST`/`PGPORT` (default `127.0.0.1:5433`). |
 | `npm run test:e2e` | 19 browser checks with Playwright: two separate devices (a phone and a laptop) using the production build against a test gateway (`tests/e2e/mock-supabase.mjs`) that speaks the Supabase Auth, RPC and Realtime protocols over the real migrated database. It covers every acceptance scenario, including the realtime sync between devices, the two-device race for the last 5 bars, and comparing the CSV download with the database. |
 
 The test gateway exists only because a full local Supabase stack (Docker) wasn't available in the build environment. Against a real Supabase project the app talks to Supabase directly.

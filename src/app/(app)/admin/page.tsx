@@ -38,6 +38,7 @@ const ACTION_LABELS: Record<string, string> = {
   initial_inventory_set: "Initial inventory set",
   inventory_adjusted: "Inventory adjusted",
   product_availability_changed: "Product availability changed",
+  product_package_changed: "Package changed",
   transaction_voided: "Sale voided",
   event_data_reset: "Sales data reset",
 };
@@ -125,37 +126,87 @@ function AdjustmentForm() {
   );
 }
 
+function PackageEditor({ product, onDone }: { product: LiveState["products"][number]; onDone: () => void }) {
+  const [bars, setBars] = useState(String(product.bars_per_unit));
+  const [tickets, setTickets] = useState(String(product.tickets_per_unit));
+  const action = useAction();
+  const b = Number(bars);
+  const t = Number(tickets);
+  const valid = Number.isInteger(b) && b >= 1 && b <= 100 && Number.isInteger(t) && t >= 1 && t <= 10000;
+  return (
+    <form
+      className="mt-2 space-y-2"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (await action.run("set_product_package", { p_product_id: product.id, p_bars: b, p_tickets: t }, `${product.name} is now ${b} bar${b > 1 ? "s" : ""} for ${t} tickets.`)) onDone();
+      }}
+    >
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs font-bold text-muted">
+          Bars per package
+          <input className={inputClass} type="number" inputMode="numeric" min={1} max={100} value={bars} onChange={(e) => setBars(e.target.value)} aria-label={`Bars per ${product.name}`} />
+        </label>
+        <label className="text-xs font-bold text-muted">
+          Tickets per package
+          <input className={inputClass} type="number" inputMode="numeric" min={1} max={10000} value={tickets} onChange={(e) => setTickets(e.target.value)} aria-label={`Tickets per ${product.name}`} />
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" className="flex-1" disabled={action.busy || !valid}>
+          {action.busy && <Spinner />} Save package
+        </Button>
+        <Button type="button" variant="ghost" onClick={onDone} disabled={action.busy}>
+          Cancel
+        </Button>
+      </div>
+      {action.msg?.tone === "bad" && <Notice tone="bad">{action.msg.text}</Notice>}
+    </form>
+  );
+}
+
 function ProductsCard({ live }: { live: LiveState }) {
   const action = useAction();
+  const [editing, setEditing] = useState<string | null>(null);
   return (
     <Card>
       <SectionTitle>Products</SectionTitle>
       <ul className="divide-y divide-line">
         {live.products.map((p) => (
-          <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
-            <div>
-              <div className="flex items-center gap-2 font-bold text-navy">
-                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: productColor(p.id) }} />
-                {p.name}
+          <li key={p.id} className="py-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 font-bold text-navy">
+                  <span className="h-2.5 w-2.5 rounded-sm" style={{ background: productColor(p.id) }} />
+                  {p.name}
+                </div>
+                <div className="text-xs text-muted">
+                  {p.bars_per_unit} bar{p.bars_per_unit > 1 ? "s" : ""} for {p.tickets_per_unit} tickets · {fmtInt(p.packages_sold)} sold
+                  {editing !== p.id && (
+                    <>
+                      {" · "}
+                      <button type="button" className="font-bold text-blue underline" onClick={() => setEditing(p.id)}>
+                        Edit package
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-muted">
-                {p.bars_per_unit} bar{p.bars_per_unit > 1 ? "s" : ""} for {p.tickets_per_unit} tickets · {fmtInt(p.packages_sold)} sold
-              </div>
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-bold">
+                <span className={p.active ? "text-good" : "text-bad"}>{p.active ? "Available" : "Unavailable"}</span>
+                <input
+                  type="checkbox"
+                  className="h-6 w-6 accent-[#1e6bff]"
+                  checked={p.active}
+                  disabled={action.busy}
+                  onChange={(e) => action.run("set_product_active", { p_product_id: p.id, p_active: e.target.checked }, `${p.name} updated.`)}
+                />
+              </label>
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm font-bold">
-              <span className={p.active ? "text-good" : "text-bad"}>{p.active ? "Available" : "Unavailable"}</span>
-              <input
-                type="checkbox"
-                className="h-6 w-6 accent-[#1e6bff]"
-                checked={p.active}
-                disabled={action.busy}
-                onChange={(e) => action.run("set_product_active", { p_product_id: p.id, p_active: e.target.checked }, `${p.name} updated.`)}
-              />
-            </label>
+            {editing === p.id && <PackageEditor product={p} onDone={() => setEditing(null)} />}
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-muted">Prices and bars per package are fixed by the competition brief.</p>
+      <p className="mt-2 text-xs text-muted">A new package size applies to sales from now on. Past sales keep the bars and tickets they were recorded with.</p>
       {action.msg?.tone === "bad" && <Notice tone="bad">{action.msg.text}</Notice>}
     </Card>
   );
