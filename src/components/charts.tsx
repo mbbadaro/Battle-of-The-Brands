@@ -13,6 +13,8 @@ const GRID = "#e2d8c3";
 function WrapperBar(props: unknown, horizontal = false) {
   const { x = 0, y = 0, width = 0, height = 0, fill = "#1e6bff" } = props as { x?: number; y?: number; width?: number; height?: number; fill?: string };
   if (width <= 0 || height <= 0) return <g />;
+  // Too thin for crimps (e.g. a long per-minute timeline): a plain bar reads better.
+  if ((horizontal ? height : width) < 6) return <rect x={x} y={y} width={width} height={height} fill={fill} />;
   const across = horizontal ? height : width;
   const along = horizontal ? width : height;
   const tooth = Math.min(5, along / 4);
@@ -94,9 +96,9 @@ export function TimelineChart({ points, interval }: { points: TimelinePoint[]; i
   return (
     <div className="h-60 w-full">
       <ResponsiveContainer>
-        <BarChart data={points} margin={{ top: 10, right: 8, left: -12, bottom: 0 }} barCategoryGap={2}>
+        <BarChart data={points} margin={{ top: 10, right: 8, left: -12, bottom: 0 }} barCategoryGap="12%">
           <CartesianGrid vertical={false} stroke={GRID} />
-          <XAxis dataKey="label" tick={AXIS} axisLine={false} tickLine={false} minTickGap={16} />
+          <XAxis dataKey="label" tick={AXIS} axisLine={false} tickLine={false} minTickGap={32} />
           <YAxis tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} width={44} />
           <Tooltip
             cursor={{ fill: "rgba(11,31,75,0.05)" }}
@@ -105,7 +107,7 @@ export function TimelineChart({ points, interval }: { points: TimelinePoint[]; i
               const p = payload[0].payload as TimelinePoint;
               return (
                 <TooltipBox
-                  title={`${p.label} (${interval})`}
+                  title={interval === "minute" ? p.label : `${p.label} (${interval})`}
                   lines={[
                     `${fmtInt(p.tickets)} tickets`,
                     `${fmtInt(p.transactions)} sales · ${fmtInt(p.bars)} bars`,

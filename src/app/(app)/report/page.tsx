@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRpc } from "@/hooks/live";
 import { useProfile } from "@/hooks/profile";
 import { useExportCsv } from "@/hooks/export";
-import type { Report } from "@/lib/types";
+import type { Report, TimelineBucket } from "@/lib/types";
 import { buildTimeline, productMetrics, ranking } from "@/lib/analytics";
 import { downloadText } from "@/lib/csv";
 import { summaryCsv, summaryText } from "@/lib/report";
@@ -18,6 +18,8 @@ import { BrandMark } from "@/components/brand";
 export default function ReportPage() {
   const profile = useProfile();
   const { data: r, error, loading } = useRpc<Report>("get_report");
+  // Per-minute buckets; until that SQL is installed the chart falls back to the 15-minute ones.
+  const { data: perMinute } = useRpc<TimelineBucket[]>("get_sales_timeline");
   const exporter = useExportCsv();
   const [copied, setCopied] = useState(false);
 
@@ -26,7 +28,7 @@ export default function ReportPage() {
 
   const tz = r.settings.timezone;
   const rows = ranking(productMetrics(r.products, r.kpis.total_tickets));
-  const timeline = buildTimeline(r.timeline, tz);
+  const timeline = perMinute ? buildTimeline(perMinute, tz) : buildTimeline(r.timeline, tz, 15);
   const hasSales = r.kpis.transactions > 0;
   const stamp = new Date().toISOString().slice(0, 10);
 

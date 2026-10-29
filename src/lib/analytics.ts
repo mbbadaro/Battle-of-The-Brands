@@ -81,13 +81,15 @@ export interface TimelinePoint {
   cumulativeTickets: number;
 }
 
-// Fills gaps between the first and last 15-minute bucket. Events longer than 4 hours roll up to hours.
-export function buildTimeline(buckets: TimelineBucket[], timeZone: string): { points: TimelinePoint[]; interval: "15 min" | "hour" } {
-  if (buckets.length === 0) return { points: [], interval: "15 min" };
-  const quarter = 15 * 60 * 1000;
+// Fills gaps between the first and last bucket (1 minute by default; 15 for the older get_dashboard
+// timeline). Events longer than 12 hours roll up to hours.
+export function buildTimeline(buckets: TimelineBucket[], timeZone: string, bucketMinutes = 1): { points: TimelinePoint[]; interval: string } {
+  const base = bucketMinutes * 60 * 1000;
+  const baseLabel = bucketMinutes === 1 ? "minute" : `${bucketMinutes} min`;
+  if (buckets.length === 0) return { points: [], interval: baseLabel };
   const first = new Date(buckets[0].bucket).getTime();
   const last = new Date(buckets[buckets.length - 1].bucket).getTime();
-  const step = last - first > 4 * 60 * 60 * 1000 ? 60 * 60 * 1000 : quarter;
+  const step = last - first > 12 * 60 * 60 * 1000 ? 60 * 60 * 1000 : base;
   const align = (t: number) => Math.floor(t / step) * step;
 
   const map = new Map<number, { transactions: number; tickets: number; bars: number }>();
@@ -108,5 +110,5 @@ export function buildTimeline(buckets: TimelineBucket[], timeZone: string): { po
     cumulative += v.tickets;
     points.push({ start: t, label: fmt.format(new Date(t)), ...v, cumulativeTickets: cumulative });
   }
-  return { points, interval: step === quarter ? "15 min" : "hour" };
+  return { points, interval: step === base ? baseLabel : "hour" };
 }

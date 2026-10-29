@@ -1,7 +1,7 @@
 "use client";
 
 import { useRpc } from "@/hooks/live";
-import type { Dashboard } from "@/lib/types";
+import type { Dashboard, TimelineBucket } from "@/lib/types";
 import { buildTimeline, highlights, productMetrics } from "@/lib/analytics";
 import { fmtInt, fmtTime } from "@/lib/format";
 import { Card, EmptyState, LoadingBlock, Notice, SectionTitle } from "@/components/ui";
@@ -12,13 +12,15 @@ import { PageHero } from "@/components/brand";
 
 export default function DashboardPage() {
   const { data: d, error, loading } = useRpc<Dashboard>("get_dashboard");
+  // Per-minute buckets; until that SQL is installed the chart falls back to the 15-minute ones.
+  const { data: perMinute } = useRpc<TimelineBucket[]>("get_sales_timeline");
 
   if (loading && !d) return <LoadingBlock label="Loading dashboard…" />;
   if (!d) return <Notice tone="bad">{error?.message ?? "Could not load the dashboard."}</Notice>;
 
   const rows = productMetrics(d.products, d.kpis.total_tickets);
   const h = highlights(rows);
-  const timeline = buildTimeline(d.timeline, d.settings.timezone);
+  const timeline = perMinute ? buildTimeline(perMinute, d.settings.timezone) : buildTimeline(d.timeline, d.settings.timezone, 15);
   const hasSales = d.kpis.transactions > 0;
 
   return (

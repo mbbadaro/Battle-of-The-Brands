@@ -56,17 +56,44 @@ describe("product analytics", () => {
 });
 
 describe("timeline", () => {
-  it("fills empty 15-minute gaps and keeps a running total", () => {
+  it("fills empty minutes and keeps a running total", () => {
+    const { points, interval } = buildTimeline(
+      [
+        { bucket: "2026-11-05T15:00:00Z", transactions: 2, tickets: 9, bars: 4 },
+        { bucket: "2026-11-05T15:03:00Z", transactions: 1, tickets: 8, bars: 5 },
+      ],
+      "America/New_York"
+    );
+    expect(interval).toBe("minute");
+    expect(points.map((p) => p.tickets)).toEqual([9, 0, 0, 8]);
+    expect(points.map((p) => p.label)).toEqual(["10:00 AM", "10:01 AM", "10:02 AM", "10:03 AM"]);
+    expect(points.at(-1)?.cumulativeTickets).toBe(17);
+  });
+
+  it("still handles the older 15-minute buckets", () => {
     const { points, interval } = buildTimeline(
       [
         { bucket: "2026-11-05T15:00:00Z", transactions: 2, tickets: 9, bars: 4 },
         { bucket: "2026-11-05T15:45:00Z", transactions: 1, tickets: 8, bars: 5 },
       ],
-      "America/New_York"
+      "America/New_York",
+      15
     );
     expect(interval).toBe("15 min");
     expect(points.map((p) => p.tickets)).toEqual([9, 0, 0, 8]);
-    expect(points.at(-1)?.cumulativeTickets).toBe(17);
+  });
+
+  it("rolls events longer than 12 hours up to hours", () => {
+    const { points, interval } = buildTimeline(
+      [
+        { bucket: "2026-11-05T09:01:00Z", transactions: 1, tickets: 3, bars: 1 },
+        { bucket: "2026-11-05T22:30:00Z", transactions: 1, tickets: 6, bars: 3 },
+      ],
+      "UTC"
+    );
+    expect(interval).toBe("hour");
+    expect(points).toHaveLength(14);
+    expect(points.at(-1)?.cumulativeTickets).toBe(9);
   });
 });
 
