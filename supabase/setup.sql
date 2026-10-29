@@ -916,3 +916,75 @@ insert into public.products (id, name, tagline, bars_per_unit, tickets_per_unit,
   ('week_pack',        'Week Pack',        '3 protein bars', 3, 6, true, 2),
   ('exam_week_bundle', 'Exam Week Bundle', '5 protein bars', 5, 8, true, 3)
 on conflict (id) do nothing;
+
+-- ===== supabase/migrations/20261029000001_fix_reset_where.sql =====
+-- Supabase loads pg_safeupdate, which rejects DELETE without WHERE.
+-- Re-creates reset_event_data with explicit WHERE clauses.
+-- Clears rehearsal data before the real event. Keeps products, settings, team and the audit log.
+create or replace function public.reset_event_data(p_confirmation text)
+returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_txns int;
+  v_adjs int;
+begin
+  perform private.require_admin();
+  if p_confirmation is distinct from 'RESET ALL SALES' then
+    perform private.fail('CONFIRMATION_REQUIRED', 'Type RESET ALL SALES to confirm.');
+  end if;
+  perform private.lock_event();
+  select count(*) into v_txns from public.transactions;
+  select count(*) into v_adjs from public.inventory_adjustments;
+  delete from public.transactions where true;  -- Supabase pg_safeupdate rejects a bare DELETE
+  delete from public.inventory_adjustments where true;
+  update public.event_settings set sales_started_at = null, updated_at = clock_timestamp() where id = 1;
+  insert into public.audit_log (actor_id, action, entity, entity_id, details)
+  values (auth.uid(), 'event_data_reset', 'event_settings', '1',
+          jsonb_build_object('transactions_deleted', v_txns, 'adjustments_deleted', v_adjs));
+  perform private.bump_ticker();
+  return private.inventory_snapshot();
+end $$;
+
+
+-- ===== supabase/migrations/20261029000002_edit_package_pricing.sql =====
+-- Lets admins change how many bars and tickets each package has.
+-- Past sales keep the values they were sold at: transaction_items snapshots
+-- bars_per_unit and tickets_per_unit when the sale is recorded.
+create or replace function public.set_product_package(p_product_id text, p_bars integer, p_tickets integer)
+returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_product public.products;
+begin
+  perform private.require_admin();
+  if p_bars is null or p_bars not between 1 and 100 then
+    perform private.fail('INVALID_PACKAGE', 'Bars per package must be a whole number from 1 to 100.');
+  end if;
+  if p_tickets is null or p_tickets not between 1 and 10000 then
+    perform private.fail('INVALID_PACKAGE', 'Tickets per package must be a whole number from 1 to 10000.');
+  end if;
+  -- Serialize with sales so a sale uses either the old or the new package, never a mix.
+  perform private.lock_event();
+  select * into v_product from public.products where id = p_product_id for update;
+  if not found then
+    perform private.fail('NOT_FOUND', 'Unknown product.');
+  end if;
+  if v_product.bars_per_unit = p_bars and v_product.tickets_per_unit = p_tickets then
+    return jsonb_build_object('id', p_product_id, 'bars_per_unit', p_bars, 'tickets_per_unit', p_tickets, 'changed', false);
+  end if;
+  update public.products
+  set bars_per_unit = p_bars,
+      tickets_per_unit = p_tickets,
+      tagline = format('%s protein bar%s', p_bars, case when p_bars = 1 then '' else 's' end)
+  where id = p_product_id;
+  insert into public.audit_log (actor_id, action, entity, entity_id, details)
+  values (auth.uid(), 'product_package_changed', 'product', p_product_id,
+          jsonb_build_object('name', v_product.name,
+                             'bars_from', v_product.bars_per_unit, 'bars_to', p_bars,
+                             'tickets_from', v_product.tickets_per_unit, 'tickets_to', p_tickets));
+  perform private.bump_ticker();
+  return jsonb_build_object('id', p_product_id, 'bars_per_unit', p_bars, 'tickets_per_unit', p_tickets, 'changed', true);
+end $$;
+
+revoke execute on function public.set_product_package(text, integer, integer) from public, anon;
+grant execute on function public.set_product_package(text, integer, integer) to authenticated;

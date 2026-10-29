@@ -341,6 +341,19 @@ await step("Seller cannot reach admin data", async () => {
   await A.screenshot({ path: SHOTS + "11-sell-cart-phone.png" });
 });
 
+await step("Admin edits a package; an open cart picks up the new tickets live", async () => {
+  await A.getByRole("button", { name: "Record sale · 9 tickets" }).waitFor();
+  await B.goto(`${APP}/admin`);
+  await B.getByRole("button", { name: "Edit package" }).nth(1).click();
+  await B.getByLabel("Bars per Week Pack").fill("4");
+  await B.getByLabel("Tickets per Week Pack").fill("7");
+  await B.screenshot({ path: SHOTS + "12-admin-edit-package.png" });
+  await B.getByRole("button", { name: "Save package" }).click();
+  await B.getByText("4 bars for 7 tickets").waitFor();
+  await B.getByText("Package changed").first().waitFor();
+  await A.getByRole("button", { name: "Record sale · 10 tickets" }).waitFor();
+});
+
 await browser.close();
 await db.end();
 const failed = results.filter((r) => !r.ok);
