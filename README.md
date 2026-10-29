@@ -115,8 +115,8 @@ All figures come from database records and exclude voided transactions.
 - **Unique customers** = distinct NetIDs with a completed transaction.
 - **Average tickets per transaction** = tickets earned ÷ completed transactions.
 - **% of tickets** (per product) = product tickets ÷ tickets earned.
-- **% of transactions containing the product** = completed sales that include it ÷ completed sales. These don't add up to 100% because one sale can contain several products.
-- **Average quantity per transaction containing the product** = packages ÷ sales that include it.
+- **% of packages sold** = packages of the product ÷ packages of all products, in completed sales. Adds up to 100% across products (up to rounding).
+- **Average packages per sale that includes the product** = packages ÷ completed sales that include it.
 - **Customer category**: each NetID is counted once, under the most recent category it gave. NetIDs that never gave one are "Not specified". Customers, sales and tickets per category therefore add up exactly to the totals.
 - **Highlights**: best seller = most packages; top revenue = most tickets; most inventory = most bars; slowest = fewest packages. Ties are shown together.
 

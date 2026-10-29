@@ -14,7 +14,7 @@ const n = (v: number) => new Intl.NumberFormat("en-US").format(v);
 
 // Plain-text summary for pasting into Slack, email or the team's group chat. No customer data.
 export function summaryText(r: Report): string {
-  const rows = ranking(productMetrics(r.products, r.kpis.total_tickets, r.kpis.transactions));
+  const rows = ranking(productMetrics(r.products, r.kpis.total_tickets));
   const k = r.kpis;
   const lines = [
     `${r.settings.event_name}: CLIF Builder's White Fudge Oreo results`,
@@ -42,7 +42,7 @@ export function summaryText(r: Report): string {
 
 // Key metrics as a two-sheet-friendly CSV: one metric per row, then per-product and per-category rows.
 export function summaryCsv(r: Report): string {
-  const rows = ranking(productMetrics(r.products, r.kpis.total_tickets, r.kpis.transactions));
+  const rows = ranking(productMetrics(r.products, r.kpis.total_tickets));
   const k = r.kpis;
   const out: unknown[][] = [
     ["metric", "value", "definition"],
@@ -59,8 +59,8 @@ export function summaryCsv(r: Report): string {
     ["voided_transactions", r.voided.count, "excluded from all totals"],
     ["voided_tickets", r.voided.tickets, "excluded from all totals"],
     [],
-    ["rank", "product", "packages_sold", "bars_consumed", "tickets", "pct_of_tickets", "pct_of_transactions_with_product", "avg_qty_per_transaction_with_product"],
-    ...rows.map((p, i) => [i + 1, p.name, p.packages, p.bars, p.tickets, p.ticketShare, p.transactionShare, p.avgQtyPerTransaction]),
+    ["rank", "product", "packages_sold", "bars_consumed", "tickets", "pct_of_tickets", "pct_of_packages_sold", "avg_qty_per_transaction_with_product"],
+    ...rows.map((p, i) => [i + 1, p.name, p.packages, p.bars, p.tickets, p.ticketShare, p.packageShare, p.avgQtyPerTransaction]),
     [],
     ["category", "customers", "transactions", "tickets", "bars"],
     ...r.categories.map((c) => [CAT[c.category], c.customers, c.transactions, c.tickets, c.bars]),
