@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeTotals, isValidNetid, normalizeNetid } from "../../src/lib/sales";
+import { computeTotals, isValidNetid, netidLabel, normalizeNetid } from "../../src/lib/sales";
 import { buildTimeline, highlights, productMetrics } from "../../src/lib/analytics";
 import { csvCell, parseCsv, toCsv } from "../../src/lib/csv";
 import type { ProductState } from "../../src/lib/types";
@@ -28,6 +28,8 @@ describe("sale totals", () => {
     expect(isValidNetid("jd45")).toBe(true);
     expect(isValidNetid("john.doe")).toBe(false);
     expect(isValidNetid("")).toBe(false);
+    expect(netidLabel(null)).toBe("no NetID");
+    expect(netidLabel("abc123")).toBe("abc123");
   });
 });
 

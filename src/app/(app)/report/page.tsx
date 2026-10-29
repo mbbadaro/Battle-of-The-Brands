@@ -98,7 +98,7 @@ export default function ReportPage() {
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
           <StatTile label="Bars sold" value={fmtInt(r.kpis.total_bars)} sub={`of ${fmtInt(r.inventory.available_total)} available`} />
           <StatTile label="Inventory utilization" value={fmtPct(r.inventory.pct_sold)} sub="bars sold ÷ bars available" />
-          <StatTile label="Unique customers" value={fmtInt(r.kpis.unique_customers)} sub="distinct NetIDs" />
+          <StatTile label="Unique customers" value={fmtInt(r.kpis.unique_customers)} sub="NetIDs + no-NetID sales" />
           <StatTile label="Transactions" value={fmtInt(r.kpis.transactions)} sub={`${fmtInt(r.voided.count)} voided, excluded`} />
           <StatTile label="Avg tickets / sale" value={fmtDec(r.kpis.avg_tickets_per_transaction)} sub="tickets ÷ transactions" />
           <StatTile label="Bars remaining" value={fmtInt(r.inventory.remaining)} sub="after adjustments" />

@@ -145,10 +145,12 @@ await step("AT4 mixed: 2 Single + 1 Week + 1 Exam = 10 bars, 20 tickets (with na
   assert.deepEqual(await truth(), { remaining: 181, tickets: 37, txns: 4 });
 });
 
-await step("AT5 NetID only (no name or category) succeeds; missing NetID is blocked", async () => {
+await step("AT5 NetID only (no name or category) succeeds; NetID is optional but a malformed one is blocked", async () => {
   await A.getByTestId("plus-single_bar").click();
+  assert.equal(await A.getByTestId("submit-sale").isDisabled(), false);
+  await A.getByTestId("netid").fill("not a netid!");
   assert.equal(await A.getByTestId("submit-sale").isDisabled(), true);
-  assert.match(await A.getByTestId("submit-sale").textContent(), /Enter NetID/);
+  assert.match(await A.getByTestId("submit-sale").textContent(), /Fix NetID/);
   await A.getByTestId("netid").fill("LMN12");
   await A.getByTestId("submit-sale").click();
   await A.getByTestId("sale-success").filter({ hasText: "lmn12" }).waitFor();

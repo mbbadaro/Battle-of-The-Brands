@@ -54,7 +54,7 @@ export function summaryCsv(r: Report): string {
     ["inventory_utilization_pct", r.inventory.pct_sold, "bars sold ÷ (initial + in − out) × 100"],
     ["tickets_earned", k.total_tickets, "tickets in completed transactions"],
     ["transactions", k.transactions, "completed transactions"],
-    ["unique_customers", k.unique_customers, "distinct NetIDs in completed transactions"],
+    ["unique_customers", k.unique_customers, "distinct NetIDs in completed transactions, plus each completed sale recorded without a NetID"],
     ["avg_tickets_per_transaction", k.avg_tickets_per_transaction, "tickets ÷ transactions"],
     ["voided_transactions", r.voided.count, "excluded from all totals"],
     ["voided_tickets", r.voided.tickets, "excluded from all totals"],

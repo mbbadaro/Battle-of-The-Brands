@@ -17,7 +17,7 @@ const FRIENDLY: Record<string, string> = {
   NOT_AUTHORIZED: "You don't have permission to do that.",
   INSUFFICIENT_STOCK: "Not enough bars left for this sale.",
   EMPTY_SALE: "Select at least one product.",
-  INVALID_NETID: "Enter a valid Cornell NetID, for example abc123.",
+  INVALID_NETID: "Enter a valid Cornell NetID (for example abc123) or leave it blank.",
 };
 
 export function toAppError(err: unknown): AppError {

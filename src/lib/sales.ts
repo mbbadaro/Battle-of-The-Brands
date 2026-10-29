@@ -42,6 +42,11 @@ export function isValidNetid(raw: string): boolean {
   return NETID_PATTERN.test(normalizeNetid(raw));
 }
 
+// NetID is optional, so sales recorded without one show this instead.
+export function netidLabel(netid: string | null): string {
+  return netid ?? "no NetID";
+}
+
 export const MAX_QTY = 100;
 
 export function itemsPayload(products: PricedProduct[], quantities: Quantities): Record<string, number> {
